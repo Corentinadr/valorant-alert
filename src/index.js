@@ -239,6 +239,23 @@ async function main() {
       res.end("Valorant alert bot en ligne ✅");
     })
     .listen(PORT, () => log(`🌐 Serveur keep-alive sur le port ${PORT}`));
+
+  // Auto-ping : le bot se réveille lui-même toutes les 10 min pour ne jamais
+  // s'endormir sur le free-tier Render (indépendant d'UptimeRobot).
+  const SELF_URL = process.env.SELF_URL;
+  if (SELF_URL) {
+    setInterval(async () => {
+      try {
+        await fetch(SELF_URL);
+        log("💓 Auto-ping OK (anti-veille)");
+      } catch (err) {
+        log("⚠️  Auto-ping échoué:", err.message);
+      }
+    }, 10 * 60 * 1000); // toutes les 10 minutes
+    log(`💓 Auto-ping activé vers ${SELF_URL}`);
+  } else {
+    log("ℹ️  SELF_URL non défini : auto-ping désactivé (ok en local).");
+  }
 }
 
 main().catch((err) => {
