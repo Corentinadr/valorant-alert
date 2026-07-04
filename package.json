@@ -1,0 +1,16 @@
+{
+  "name": "valorant-discord-alert",
+  "version": "1.0.0",
+  "description": "Alerte Discord (webhook) à chaque victoire/défaite d'un joueur Valorant, via l'API HenrikDev.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
