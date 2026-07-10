@@ -159,6 +159,27 @@ async function getMatchStats(player, matchId) {
     mvp.name?.toLowerCase() === name.toLowerCase() &&
     mvp.tag?.toLowerCase() === tag.toLowerCase();
 
+  // First bloods = premier kill de chaque round attribué à notre joueur.
+  // On regarde l'ensemble des kills, groupés par round, et on garde le plus tôt.
+  // null si l'API ne fournit pas les événements de kill (on n'affichera rien).
+  let firstBloods = null;
+  const kills = match.kills;
+  if (Array.isArray(kills) && kills.length > 0 && me.puuid) {
+    const earliest = {}; // round -> { time, killerPuuid }
+    for (const k of kills) {
+      const r = k.round;
+      const t = k.kill_time_in_round;
+      if (r === undefined || t === undefined) continue;
+      if (earliest[r] === undefined || t < earliest[r].time) {
+        earliest[r] = { time: t, killer: k.killer_puuid };
+      }
+    }
+    firstBloods = 0;
+    for (const r in earliest) {
+      if (earliest[r].killer === me.puuid) firstBloods++;
+    }
+  }
+
   return {
     agent: me.character ?? "?",
     kills: s.kills ?? 0,
@@ -167,6 +188,7 @@ async function getMatchStats(player, matchId) {
     kd: kd.toFixed(2),
     acs,
     hs,
+    firstBloods,
     myRounds,
     enemyRounds,
     mvp,
@@ -207,11 +229,14 @@ async function sendAlert(player, mmr, stats) {
 
   if (stats) {
     // Section Combat
+    const combatLine2 =
+      `KD ${stats.kd}  ·  ACS ${stats.acs}  ·  HS ${stats.hs}%` +
+      (stats.firstBloods !== null ? `  ·  FB ${stats.firstBloods}` : "");
     fields.push({
       name: "⚔️ Combat",
       value:
         `**${stats.kills} / ${stats.deaths} / ${stats.assists}**\n` +
-        `KD ${stats.kd}  ·  ACS ${stats.acs}  ·  HS ${stats.hs}%`,
+        combatLine2,
       inline: true,
     });
     // Section Rang
